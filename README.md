@@ -1,30 +1,44 @@
-# spajam_demo_app
+## このアプリについて
 
-A new Flutter project.
+spajamの予選で使う用のアプリをあらかじめ作っておきました。
 
-## Getting Started
+自分のブランチ切って
 
-This project is a starting point for a Flutter application that follows the
-[simple app state management
-tutorial](https://flutter.dev/docs/development/data-and-backend/state-mgmt/simple).
+色々いじって遊んだりしても面白いかもしれません。
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
 
-## Assets
+## コード解説
 
-The `assets` directory houses images, fonts, and any other files you want to
-include with your application.
+flutter公式のskeletonプロジェクトの説明を見ても良いのですが
 
-The `assets/images` directory contains [resolution-aware
-images](https://flutter.dev/docs/development/ui/assets-and-images#resolution-aware).
+多分これが一番わかりやすいので参考記事です。
 
-## Localization
+https://blog.flutteruniv.com/flutter-skeleton-template/
 
-This project generates localized messages based on arb files found in
-the `lib/src/localization` directory.
+## ブランチルール
 
-To support additional languages, please visit the tutorial on
-[Internationalizing Flutter
-apps](https://flutter.dev/docs/development/accessibility-and-localization/internationalization)
+なんか良さげなGitHubFlowってのがあったので使ってみませんか？
+
+```mermaid
+    gitGraph
+      commit
+      branch feature/hoge
+      checkout feature/hoge
+      commit
+      checkout main
+      branch feature/huga
+      checkout feature/huga
+      commit
+      checkout main
+      merge feature/huga
+      checkout feature/hoge
+      commit
+      checkout main
+      merge feature/hoge
+      branch feature/hogehoge
+      checkout feature/hogehoge
+      commit
+      commit
+      checkout main
+      merge feature/hogehoge
+```
