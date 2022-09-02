@@ -10,7 +10,7 @@ class SampleItemDetailsView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('アイテム詳細'),
+        title: const Text('アイテム詳細をここに'),
       ),
       body: const Center(
         child: Text('More Information Here'),
