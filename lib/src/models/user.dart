@@ -9,10 +9,10 @@ class User {
   String name;
   String? image;
   String message;
-  DocumentReference? matchingWith;
+  String matchingWith = "";
   double? longitude;
   double? latitude;
-  DocumentReference? itemRef;
+  String itemId = "";
   Timestamp? updatedAt;
   bool isApproved = false;
 
@@ -21,10 +21,10 @@ class User {
     required this.name,
     this.image,
     required this.message,
-    this.matchingWith,
+    this.matchingWith = "",
     this.longitude,
     this.latitude,
-    this.itemRef,
+    this.itemId = "",
     this.updatedAt,
     this.isApproved = false,
   });
@@ -49,10 +49,10 @@ class User {
       name: "test",
       image: "test",
       message: "test",
-      matchingWith: null,
+      matchingWith: "",
       longitude: longitude,
       latitude: latitude,
-      itemRef: null,
+      itemId: "",
       updatedAt: null,
     );
   }
@@ -67,7 +67,7 @@ class User {
       matchingWith: data['matchingWith'],
       longitude: data['longitude'],
       latitude: data['latitude'],
-      itemRef: data['item'],
+      itemId: data['itemId'],
       updatedAt: data['updatedAt'],
     );
   }
@@ -81,7 +81,7 @@ class User {
       'matchingWith': user.matchingWith,
       'longitude': user.longitude,
       'latitude': user.latitude,
-      'itemRef': user.itemRef,
+      'itemId': user.itemId,
       'isApproved': user.isApproved,
       'updatedAt': user.updatedAt,
     };
