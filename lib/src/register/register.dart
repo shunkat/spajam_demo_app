@@ -60,33 +60,27 @@ class _MyRegisterViewState extends State<MyRegisterView> {
             obscureText: true,
             decoration: InputDecoration(hintText: 'Password'),
           ),
-          ElevatedButton(
-            child: Text('Sign In'),
-            onPressed: (){},
 
           //  ビルド通ったら下を有効化
-          //     ElevatedButton(
-          //       child: Text('Sign In'),
-          //       onPressed: () async {
-          //         try {
-          //           await FirebaseAuth.instance.signInWithEmailAndPassword(
-          //             email: _emailController.text.trim(),
-          //             password: _passwordController.text.trim(),
-          //           );
-          //           final user = FirebaseAuth.instance.currentUser!;
-          //
-          //           final snackBar = SnackBar(
-          //             content: Text(user.email!),
-          //           );
-          //
-          //           ScaffoldMessenger.of(context).showSnackBar(snackBar);
-          //         } catch (e) {
-          //           print(e);
-          //         }
-          //       },
-          //     )
+          ElevatedButton(
+            child: Text('Sign In'),
+            onPressed: () async {
+              try {
+                await FirebaseAuth.instance.signInWithEmailAndPassword(
+                  email: _emailController.text.trim(),
+                  password: _passwordController.text.trim(),
+                );
+                final user = FirebaseAuth.instance.currentUser!;
 
+                final snackBar = SnackBar(
+                  content: Text(user.email!),
+                );
 
+                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+              } catch (e) {
+                print(e);
+              }
+            },
           )
         ],
       ),
