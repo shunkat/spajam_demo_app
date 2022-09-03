@@ -2,6 +2,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../sample_feature/sample_item_list_view.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -35,9 +37,11 @@ class MyRegisterView extends StatefulWidget {
 class _MyRegisterViewState extends State<MyRegisterView> {
   String? email;
   String? password;
+  String? tweet;
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _tweetController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +54,7 @@ class _MyRegisterViewState extends State<MyRegisterView> {
             onChanged: (email) {
               this.email = email;
             },
-            decoration: InputDecoration(hintText: 'Email'),
+            decoration: InputDecoration(hintText: 'Eメール'),
           ),
           TextField(
             controller: _passwordController,
@@ -58,12 +62,20 @@ class _MyRegisterViewState extends State<MyRegisterView> {
               this.password = password;
             },
             obscureText: true,
-            decoration: InputDecoration(hintText: 'Password'),
+            decoration: InputDecoration(hintText: 'パスワード'),
+          ),
+
+          TextField(
+            controller: _tweetController,
+            onChanged: (password) {
+              this.tweet = tweet;
+            },
+            decoration: InputDecoration(hintText: 'あなたを表す一言'),
           ),
 
           //  ビルド通ったら下を有効化
           ElevatedButton(
-            child: Text('Sign In'),
+            child: Text('登録/ログイン'),
             onPressed: () async {
               try {
                 await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -76,7 +88,12 @@ class _MyRegisterViewState extends State<MyRegisterView> {
                   content: Text(user.email!),
                 );
 
-                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (BuildContext context) => SampleItemListView(),
+                    ),
+                );
               } catch (e) {
                 print(e);
               }
