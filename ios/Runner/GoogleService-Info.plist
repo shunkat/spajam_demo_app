@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>711611595943-rd6l6ot5jnm0er57jq8hvjo291hqhsto.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.711611595943-rd6l6ot5jnm0er57jq8hvjo291hqhsto</string>
+	<key>API_KEY</key>
+	<string>AIzaSyB7cmHNaXJZ40fyCVvgypSCTnG_ggl5Kqs</string>
+	<key>GCM_SENDER_ID</key>
+	<string>711611595943</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.spajamDemoApp</string>
+	<key>PROJECT_ID</key>
+	<string>spajam-2022-09</string>
+	<key>STORAGE_BUCKET</key>
+	<string>spajam-2022-09.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:711611595943:ios:ac030a1e0294b5d8d7af82</string>
+</dict>
+</plist>

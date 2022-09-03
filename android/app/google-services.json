@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "711611595943",
+    "project_id": "spajam-2022-09",
+    "storage_bucket": "spajam-2022-09.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:711611595943:android:28014d5f73f0b308d7af82",
+        "android_client_info": {
+          "package_name": "com.example.spajam_demo_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "711611595943-t5os079k78vkc8f9grqiefji3tl4e659.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDIEdeMEd0a_4NiuXxTWihnZp2DAW1s58M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "711611595943-t5os079k78vkc8f9grqiefji3tl4e659.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "711611595943-rd6l6ot5jnm0er57jq8hvjo291hqhsto.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.spajamDemoApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
