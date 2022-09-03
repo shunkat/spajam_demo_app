@@ -5,20 +5,23 @@ class TestCounter {
   DateTime? updatedAt;
   DateTime? createdAt;
 
+  bool incrementCounter = false;
+
   TestCounter({required this.count, this.updatedAt, this.createdAt});
 
-  Map<String, dynamic> toFirestore() {
+  Map<String, dynamic> toJson() {
     return {
-      'count': count,
-      'updatedAt': FieldValue.serverTimestamp(),
+      'count': incrementCounter ? FieldValue.serverTimestamp() : count,
+      'updatedAt': updatedAt,
+      'createdAt': createdAt,
     };
   }
 
   static TestCounter fromFirestore(Map<String, dynamic> data) {
     return TestCounter(
       count: data['count'],
-      updatedAt: data['updatedAt'] == null ? DateTime.now() : data['updatedAt'].toDate(),
-      createdAt: data['createdAt'] == null ? DateTime.now() : data['createdAt'].toDate(),
+      updatedAt: data['updatedAt']?.toDate(),
+      createdAt: data['createdAt']?.toDate(),
     );
   }
 }
