@@ -78,10 +78,10 @@ class _MyProfileViewState extends State<MyProfileView> {
                 name: _nickNameController.text.trim(),
                 image: null,
                 message: _oneLineMessageController.text.trim(),
-                matchingWith: null,
+                matchingWith: "",
                 longitude: null,
                 latitude: null,
-                itemRef: null,
+                itemId: "",
                 updatedAt: null,
               );
               try {

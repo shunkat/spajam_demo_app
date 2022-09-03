@@ -1,8 +1,12 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'dart:convert' as convert;
+import 'package:http/http.dart' as http;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -39,6 +43,7 @@ class MapViewState extends State<MapView> {
     startCaptureUsers();
     startPostLocation();
     prepareIcons();
+    startCaptureCurrentUser();
   }
 
   prepareIcons() {
@@ -61,18 +66,112 @@ class MapViewState extends State<MapView> {
     return (await uiFI.image.toByteData(format: ImageByteFormat.png))!.buffer.asUint8List();
   }
 
+  bool isWaitingOtherApproving = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('さがす')),
-      body: GoogleMap(
-        mapType: MapType.normal,
-        initialCameraPosition: _initialPosition ?? _kGooglePlex,
-        onMapCreated: (GoogleMapController controller) {
-          _controller = controller;
-        },
-        markers: markers,
-        myLocationEnabled: true,
+      body: Stack(
+        children: [
+          GoogleMap(
+            mapType: MapType.normal,
+            initialCameraPosition: _initialPosition ?? _kGooglePlex,
+            onMapCreated: (GoogleMapController controller) {
+              _controller = controller;
+            },
+            markers: markers,
+            myLocationEnabled: true,
+          ),
+          Builder(builder: (context) {
+            if (isWaitingOtherApproving) {
+              return Padding(
+                padding: const EdgeInsets.all(30.0),
+                child: Container(
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                    child: Text(
+                      'お相手の完了を待っています...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Color.fromARGB(255, 34, 34, 34),
+                  ),
+                ),
+              );
+            } else if (isMatching) {
+              return Stack(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(30.0),
+                    child: Container(
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                        child: Text(
+                          '宝箱のアイコンに近づき、\n「わらしべ！」と叫んでお互いを見つけ\n持ち物を交換しましょう。',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Color.fromARGB(255, 34, 34, 34),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 8,
+                    right: 30,
+                    child: ElevatedButton(
+                      child: const Text(
+                        '完了',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(255, 199, 182, 28),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        side: const BorderSide(
+                          color: Colors.white,
+                          width: 2,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 45,
+                        ),
+                      ),
+                      onPressed: () {
+                        String url =
+                            "https://asia-northeast1-spajam-2022-09.cloudfunctions.net/callables-transaction-finish";
+                        Map<String, String> headers = {'content-type': 'application/json'};
+                        String body = convert.json.encode({
+                          "data": {
+                            "userId": auth.FirebaseAuth.instance.currentUser!.uid,
+                          }
+                        });
+                        http.post(Uri.parse(url), headers: headers, body: body).then((res) {
+                          setState(() => isWaitingOtherApproving = true);
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              );
+            } else {
+              return Container();
+            }
+          })
+        ],
       ),
     );
   }
@@ -183,6 +282,60 @@ class MapViewState extends State<MapView> {
     final position = await Geolocator.getCurrentPosition();
     setState(() {
       _initialPosition = CameraPosition(target: LatLng(position.latitude, position.longitude), zoom: 14);
+    });
+  }
+
+  bool isMatching = false;
+  void startCaptureCurrentUser() {
+    FirebaseFirestore.instance
+        .collection('users')
+        .where('id', isEqualTo: auth.FirebaseAuth.instance.currentUser!.uid)
+        .where('matchingWith', isNotEqualTo: "")
+        .snapshots()
+        .listen((event) {
+      if (event.docs.length > 0) {
+        showDialog(
+          barrierDismissible: false,
+          context: context,
+          builder: (context) {
+            return CupertinoAlertDialog(
+              content: Text('他のわらしべとすれ違いました！\n実際に会って交換してみましょう！'),
+              actions: [
+                CupertinoDialogAction(
+                  child: Text("OK"),
+                  onPressed: () {
+                    setState(() => {isMatching = true});
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      } else if (event.docChanges.length > 0) {
+        showDialog(
+          barrierDismissible: false,
+          context: context,
+          builder: (context) {
+            return CupertinoAlertDialog(
+              content: Text('交換が完了しました！'),
+              actions: [
+                CupertinoDialogAction(
+                  child: Text("OK"),
+                  onPressed: () {
+                    setState(() => {isMatching = true});
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            );
+          },
+        );
+        isMatching = false;
+        isWaitingOtherApproving = false;
+      }
+
+      setState(() {});
     });
   }
 }
