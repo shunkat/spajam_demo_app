@@ -1,9 +1,11 @@
 import 'dart:async';
-import 'dart:math';
+import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:spajam_demo_app/src/models/user.dart';
@@ -18,11 +20,14 @@ class MapView extends StatefulWidget {
 
 class MapViewState extends State<MapView> {
   late GoogleMapController _controller;
+  late BitmapDescriptor matchingIcon;
+  late BitmapDescriptor normalIcon;
   static const CENTER_POSITION = LatLng(43.0686606, 141.3485613);
   final CameraPosition _kGooglePlex = const CameraPosition(
     target: CENTER_POSITION,
     zoom: 14,
   );
+  CameraPosition? _initialPosition;
   Set<Marker> markers = {};
 
   Set<User> users = {};
@@ -30,13 +35,30 @@ class MapViewState extends State<MapView> {
   @override
   void initState() {
     super.initState();
+    setInitialPosition();
     startCaptureUsers();
     startPostLocation();
-    // User.fetchUsers().then((users) {
-    //   setState(() {
-    //     markers.addAll(users.map((e) => _userMarker(e)));
-    //   });
-    // });
+    prepareIcons();
+  }
+
+  prepareIcons() {
+    imageChangeUint8List('assets/images/marker.png', 104, 92).then((onValue) {
+      normalIcon = BitmapDescriptor.fromBytes(onValue);
+    });
+    imageChangeUint8List('assets/images/matching_marker.png', 104, 92).then((onValue) {
+      matchingIcon = BitmapDescriptor.fromBytes(onValue);
+    });
+  }
+
+  Future<Uint8List> imageChangeUint8List(String path, int height, int width) async {
+    final ByteData byteData = await rootBundle.load(path);
+    final Codec codec = await instantiateImageCodec(
+      byteData.buffer.asUint8List(),
+      targetHeight: height,
+      targetWidth: width,
+    );
+    final FrameInfo uiFI = await codec.getNextFrame();
+    return (await uiFI.image.toByteData(format: ImageByteFormat.png))!.buffer.asUint8List();
   }
 
   @override
@@ -45,11 +67,12 @@ class MapViewState extends State<MapView> {
       appBar: AppBar(title: const Text('さがす')),
       body: GoogleMap(
         mapType: MapType.normal,
-        initialCameraPosition: _kGooglePlex,
+        initialCameraPosition: _initialPosition ?? _kGooglePlex,
         onMapCreated: (GoogleMapController controller) {
           _controller = controller;
         },
         markers: markers,
+        myLocationEnabled: true,
       ),
     );
   }
@@ -57,6 +80,7 @@ class MapViewState extends State<MapView> {
   Marker _userMarker(User user) {
     return Marker(
       markerId: MarkerId(user.id),
+      icon: user.matchingWith == null ? normalIcon : matchingIcon,
       position: LatLng(user.latitude!, user.longitude!),
     );
   }
@@ -70,24 +94,26 @@ class MapViewState extends State<MapView> {
         query = query.where('updatedAt', isGreaterThan: latestUpdatedAt).orderBy('updatedAt');
       }
       query.get().then((res) async {
-        // if (res.size > 0) {
-        final updatedUsers = await User.fetchUsers(); // res.docs.map((e) => User.fromFirestore(e));
+        if (res.size > 0) {
+          final updatedUsers = res.docs.map((e) => User.fromFirestore(e));
 
-        latestUpdatedAt = updatedUsers.last.updatedAt;
+          latestUpdatedAt = updatedUsers.last.updatedAt;
 
-        for (var user in updatedUsers) {
-          try {
-            final target = users.firstWhere((e) => e.id == user.id);
-            target
-              ..latitude = user.latitude
-              ..longitude = user.longitude;
-          } catch (e) {
-            users.add(user);
+          for (var user in updatedUsers) {
+            try {
+              final target = users.firstWhere((e) => e.id == user.id);
+              target
+                ..latitude = user.latitude
+                ..longitude = user.longitude;
+            } catch (e) {
+              users.add(user);
+            }
           }
         }
-        // }
         setState(() {
-          markers = Set.from(users.where((u) => u.latitude != null).map((e) => _userMarker(e)));
+          markers = Set.from(users.where((u) {
+            return u.id != auth.FirebaseAuth.instance.currentUser!.uid && u.latitude != null;
+          }).map((e) => _userMarker(e)));
         });
       });
     });
@@ -95,7 +121,6 @@ class MapViewState extends State<MapView> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
     timer?.cancel();
     positionTimer?.cancel();
@@ -151,5 +176,13 @@ class MapViewState extends State<MapView> {
     // When we reach here, permissions are granted and we can
     // continue accessing the position of the device.
     return await Geolocator.getCurrentPosition();
+  }
+
+  void setInitialPosition() async {
+    await _determinePosition();
+    final position = await Geolocator.getCurrentPosition();
+    setState(() {
+      _initialPosition = CameraPosition(target: LatLng(position.latitude, position.longitude), zoom: 14);
+    });
   }
 }
