@@ -15,7 +15,6 @@ void main() async {
 class ProfileView extends StatelessWidget {
   const ProfileView({Key? key}) : super(key: key);
 
-
   static const routeName = '/profile';
 
   @override
@@ -66,7 +65,6 @@ class _MyProfileViewState extends State<MyProfileView> {
             decoration: InputDecoration(hintText: 'ひとこと'),
           ),
 
-
           //  ビルド通ったら下を有効化
           ElevatedButton(
             child: Text('次へ'),
@@ -80,12 +78,14 @@ class _MyProfileViewState extends State<MyProfileView> {
               try {
                 var doc = await FirebaseFirestore.instance.collection('users').doc(user.uid);
                 await doc.set(insertObj);
+
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                  builder: (BuildContext context) => SampleItemListView(),
-                ),);
-              } catch ( e ) {
+                    builder: (BuildContext context) => SampleItemListView(),
+                  ),
+                );
+              } catch (e) {
                 print('-----insert error----');
                 print(e);
               }

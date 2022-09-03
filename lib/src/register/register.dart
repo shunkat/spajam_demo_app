@@ -65,15 +65,13 @@ class _MyRegisterViewState extends State<MyRegisterView> {
             decoration: InputDecoration(hintText: 'パスワード'),
           ),
 
-
           //  ビルド通ったら下を有効化
           ElevatedButton(
             child: Text('登録'),
             onPressed: () async {
               try {
                 final FirebaseAuth auth = FirebaseAuth.instance;
-                final UserCredential result =
-                await auth.createUserWithEmailAndPassword(
+                final UserCredential result = await auth.createUserWithEmailAndPassword(
                   email: _emailController.text.trim(),
                   password: _passwordController.text.trim(),
                 );
@@ -85,10 +83,10 @@ class _MyRegisterViewState extends State<MyRegisterView> {
                 );
 
                 Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ProfileView(),
-                    ),
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProfileView(),
+                  ),
                 );
               } catch (e) {
                 print(e);
