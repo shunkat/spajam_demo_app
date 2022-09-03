@@ -55,14 +55,13 @@ class _MyProfileViewState extends State<MyProfileView> {
   // アップロード処理
   void _upload() async {
     // imagePickerで画像を選択する
-    final pickerFile =
-    await ImagePicker().pickImage(source: ImageSource.gallery);
+    final pickerFile = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickerFile == null) {
-      return ;
+      return;
     }
     File file = File(pickerFile.path);
     FirebaseStorage storage = FirebaseStorage.instance;
-    User? user = FirebaseAuth.instance.currentUser;
+    AuthUser? user = auth.FirebaseAuth.instance.currentUser;
     _uid = user!.uid;
     try {
       await storage.ref("users/$_uid/profile.png").putFile(file);
@@ -85,13 +84,13 @@ class _MyProfileViewState extends State<MyProfileView> {
         children: [
           GestureDetector(
             child: SizedBox(
-              width:100,
-              height:100,
+              width: 100,
+              height: 100,
               child: _img != null
-                ? _img!
-                : Container(
-                color: Colors.grey,
-              ),
+                  ? _img!
+                  : Container(
+                      color: Colors.grey,
+                    ),
             ),
             onTap: _upload,
           ),
@@ -116,7 +115,7 @@ class _MyProfileViewState extends State<MyProfileView> {
             onPressed: () async {
               AuthUser? user = auth.FirebaseAuth.instance.currentUser;
               final userData = User(
-                id: _uid,
+                id: user!.uid,
                 name: _nickNameController.text.trim(),
                 image: "/users/$_uid/profile.png",
                 message: _oneLineMessageController.text.trim(),
@@ -127,7 +126,7 @@ class _MyProfileViewState extends State<MyProfileView> {
                 updatedAt: null,
               );
               try {
-                var doc = FirebaseFirestore.instance.collection('users').doc(_uid);
+                var doc = FirebaseFirestore.instance.collection('users').doc(user.uid);
                 await doc.set({
                   ...User.toFirestore(userData),
                   'updatedAt': FieldValue.serverTimestamp(),
