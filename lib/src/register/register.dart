@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import '../sample_feature/sample_item_list_view.dart';
+import '../register/profile.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +13,8 @@ void main() async {
 
 class RegisterView extends StatelessWidget {
   const RegisterView({Key? key}) : super(key: key);
+
+  static const routeName = '/';
 
   @override
   Widget build(BuildContext context) {
@@ -37,11 +39,9 @@ class MyRegisterView extends StatefulWidget {
 class _MyRegisterViewState extends State<MyRegisterView> {
   String? email;
   String? password;
-  String? tweet;
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _tweetController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -65,24 +65,20 @@ class _MyRegisterViewState extends State<MyRegisterView> {
             decoration: InputDecoration(hintText: 'パスワード'),
           ),
 
-          TextField(
-            controller: _tweetController,
-            onChanged: (password) {
-              this.tweet = tweet;
-            },
-            decoration: InputDecoration(hintText: 'あなたを表す一言'),
-          ),
 
           //  ビルド通ったら下を有効化
           ElevatedButton(
-            child: Text('登録/ログイン'),
+            child: Text('登録'),
             onPressed: () async {
               try {
-                await FirebaseAuth.instance.signInWithEmailAndPassword(
+                final FirebaseAuth auth = FirebaseAuth.instance;
+                final UserCredential result =
+                await auth.createUserWithEmailAndPassword(
                   email: _emailController.text.trim(),
                   password: _passwordController.text.trim(),
                 );
-                final user = FirebaseAuth.instance.currentUser!;
+
+                final User user = result.user!;
 
                 final snackBar = SnackBar(
                   content: Text(user.email!),
@@ -91,7 +87,7 @@ class _MyRegisterViewState extends State<MyRegisterView> {
                 Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (BuildContext context) => SampleItemListView(),
+                      builder: (context) => ProfileView(),
                     ),
                 );
               } catch (e) {
