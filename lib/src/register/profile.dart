@@ -1,10 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
+import 'package:spajam_demo_app/src/models/user.dart';
+import 'package:spajam_demo_app/src/view/map_view.dart';
 
 import '../sample_feature/sample_item_list_view.dart';
 
+typedef AuthUser = auth.User;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -69,15 +72,24 @@ class _MyProfileViewState extends State<MyProfileView> {
           ElevatedButton(
             child: Text('次へ'),
             onPressed: () async {
-              User? user = FirebaseAuth.instance.currentUser;
-              Map<String, dynamic> insertObj = {
-                'id': user!.uid,
-                'name': _nickNameController.text.trim(),
-                'message': _oneLineMessageController.text.trim(),
-              };
+              AuthUser? user = auth.FirebaseAuth.instance.currentUser;
+              final userData = User(
+                id: user!.uid,
+                name: _nickNameController.text.trim(),
+                image: null,
+                message: _oneLineMessageController.text.trim(),
+                matchingWith: null,
+                longitude: null,
+                latitude: null,
+                itemRef: null,
+                updatedAt: null,
+              );
               try {
-                var doc = await FirebaseFirestore.instance.collection('users').doc(user.uid);
-                await doc.set(insertObj);
+                var doc = FirebaseFirestore.instance.collection('users').doc(user.uid);
+                await doc.set({
+                  ...User.toFirestore(userData),
+                  'updatedAt': FieldValue.serverTimestamp(),
+                });
 
                 Navigator.pushReplacement(
                   context,

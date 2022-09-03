@@ -2,10 +2,11 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:spajam_demo_app/src/models/user.dart';
 
 class MapView extends StatefulWidget {
   static const routeName = '/map';
@@ -56,7 +57,7 @@ class MapViewState extends State<MapView> {
   Marker _userMarker(User user) {
     return Marker(
       markerId: MarkerId(user.id),
-      position: LatLng(user.latitude, user.longitude),
+      position: LatLng(user.latitude!, user.longitude!),
     );
   }
 
@@ -86,7 +87,7 @@ class MapViewState extends State<MapView> {
         }
         // }
         setState(() {
-          markers = Set.from(users.map((e) => _userMarker(e)));
+          markers = Set.from(users.where((u) => u.latitude != null).map((e) => _userMarker(e)));
         });
       });
     });
@@ -108,7 +109,7 @@ class MapViewState extends State<MapView> {
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.best,
       );
-      FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid).update({
+      FirebaseFirestore.instance.collection('users').doc(auth.FirebaseAuth.instance.currentUser!.uid).update({
         'longitude': position.longitude,
         'latitude': position.latitude,
         'updatedAt': FieldValue.serverTimestamp(),
@@ -150,72 +151,5 @@ class MapViewState extends State<MapView> {
     // When we reach here, permissions are granted and we can
     // continue accessing the position of the device.
     return await Geolocator.getCurrentPosition();
-  }
-}
-
-class User {
-  String id;
-  String name;
-  String image;
-  String message;
-  DocumentReference? matchingWith;
-  double longitude;
-  double latitude;
-  DocumentReference? item;
-  Timestamp? updatedAt;
-
-  User({
-    required this.id,
-    required this.name,
-    required this.image,
-    required this.message,
-    required this.matchingWith,
-    required this.longitude,
-    required this.latitude,
-    required this.item,
-    required this.updatedAt,
-  });
-
-  static Future<List<User>> fetchUsers() async {
-    return [
-      dummyUser(),
-      dummyUser(),
-      dummyUser(),
-      dummyUser(),
-      dummyUser(),
-    ];
-  }
-
-  static User dummyUser() {
-    final longitude =
-        MapViewState.CENTER_POSITION.longitude + Random().nextDouble() / 10 * (Random().nextBool() ? 1 : -1);
-    final latitude =
-        MapViewState.CENTER_POSITION.latitude + Random().nextDouble() / 10 * (Random().nextBool() ? 1 : -1);
-    return User(
-      id: "$longitude-$latitude",
-      name: "test",
-      image: "test",
-      message: "test",
-      matchingWith: null,
-      longitude: longitude,
-      latitude: latitude,
-      item: null,
-      updatedAt: null,
-    );
-  }
-
-  static User fromFirestore(DocumentSnapshot snapshot) {
-    final data = snapshot.data() as Map<String, dynamic>;
-    return User(
-      id: snapshot.id,
-      name: data['name'],
-      image: data['image'],
-      message: data['message'],
-      matchingWith: data['matchingWith'],
-      longitude: data['longitude'],
-      latitude: data['latitude'],
-      item: data['item'],
-      updatedAt: data['updatedAt'],
-    );
   }
 }
