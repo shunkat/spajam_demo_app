@@ -126,7 +126,7 @@ class _MyProfileViewState extends State<MyProfileView> {
                 updatedAt: null,
               );
               try {
-                var doc = FirebaseFirestore.instance.collection('users').doc(_uid);
+                var doc = FirebaseFirestore.instance.collection('users').doc(user.uid);
                 await doc.set({
                   ...User.toFirestore(userData),
                   'updatedAt': FieldValue.serverTimestamp(),
