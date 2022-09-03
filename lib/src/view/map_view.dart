@@ -1,6 +1,8 @@
+import 'dart:async';
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class MapView extends StatefulWidget {
@@ -13,12 +15,25 @@ class MapView extends StatefulWidget {
 
 class MapViewState extends State<MapView> {
   late GoogleMapController _controller;
-  //初期位置
+  static const CENTER_POSITION = LatLng(43.0686606, 141.3485613);
   final CameraPosition _kGooglePlex = const CameraPosition(
-    target: LatLng(43.0686606, 141.3485613),
+    target: CENTER_POSITION,
     zoom: 14,
   );
   Set<Marker> markers = {};
+
+  Set<User> users = {};
+
+  @override
+  void initState() {
+    super.initState();
+    startCaptureUsers();
+    User.fetchUsers().then((users) {
+      setState(() {
+        markers.addAll(users.map((e) => _userMarker(e)));
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,19 +45,48 @@ class MapViewState extends State<MapView> {
         onMapCreated: (GoogleMapController controller) {
           _controller = controller;
         },
-        markers: {
-          userMarker(User.dummyUser(141.3485613, 43.0686606)),
-          userMarker(User.dummyUser(141.1222, 43.06231)),
-        },
+        markers: markers,
       ),
     );
   }
 
-  Marker userMarker(User user) {
+  Marker _userMarker(User user) {
     return Marker(
       markerId: MarkerId(user.id),
       position: LatLng(user.latitude, user.longitude),
     );
+  }
+
+  Timestamp? latestUpdatedAt;
+  Timer? timer;
+  startCaptureUsers() {
+    timer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      Query query = FirebaseFirestore.instance.collection('users');
+      if (latestUpdatedAt != null) {
+        query = query.where('updatedAt', isGreaterThan: latestUpdatedAt).orderBy('updatedAt');
+      }
+      query.get().then((res) async {
+        // if (res.size > 0) {
+        final updatedUsers = await User.fetchUsers(); // res.docs.map((e) => User.fromFirestore(e));
+
+        latestUpdatedAt = updatedUsers.last.updatedAt;
+
+        for (var user in updatedUsers) {
+          try {
+            final target = users.firstWhere((e) => e.id == user.id);
+            target
+              ..latitude = user.latitude
+              ..longitude = user.longitude;
+          } catch (e) {
+            users.add(user);
+          }
+        }
+        // }
+        setState(() {
+          markers = Set.from(users.map((e) => _userMarker(e)));
+        });
+      });
+    });
   }
 }
 
@@ -55,6 +99,7 @@ class User {
   double longitude;
   double latitude;
   DocumentReference? item;
+  Timestamp? updatedAt;
 
   User({
     required this.id,
@@ -65,9 +110,24 @@ class User {
     required this.longitude,
     required this.latitude,
     required this.item,
+    required this.updatedAt,
   });
 
-  static User dummyUser(double longitude, double latitude) {
+  static Future<List<User>> fetchUsers() async {
+    return [
+      dummyUser(),
+      dummyUser(),
+      dummyUser(),
+      dummyUser(),
+      dummyUser(),
+    ];
+  }
+
+  static User dummyUser() {
+    final longitude =
+        MapViewState.CENTER_POSITION.longitude + Random().nextDouble() / 10 * (Random().nextBool() ? 1 : -1);
+    final latitude =
+        MapViewState.CENTER_POSITION.latitude + Random().nextDouble() / 10 * (Random().nextBool() ? 1 : -1);
     return User(
       id: "$longitude-$latitude",
       name: "test",
@@ -77,6 +137,7 @@ class User {
       longitude: longitude,
       latitude: latitude,
       item: null,
+      updatedAt: null,
     );
   }
 
@@ -91,6 +152,7 @@ class User {
       longitude: data['longitude'],
       latitude: data['latitude'],
       item: data['item'],
+      updatedAt: data['updatedAt'],
     );
   }
 }
