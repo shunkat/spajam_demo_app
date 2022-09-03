@@ -1,54 +1,50 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:spajam_demo_app/src/models/user.dart';
-import 'package:spajam_demo_app/src/view/map_view.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:spajam_demo_app/src/register/stuff.dart';
 
 import '../sample_feature/sample_item_list_view.dart';
 
-typedef AuthUser = auth.User;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
-  runApp(ProfileView());
+  runApp(StuffView());
 }
 
-class ProfileView extends StatelessWidget {
-  const ProfileView({Key? key}) : super(key: key);
+class StuffView extends StatelessWidget {
+  const StuffView({Key? key}) : super(key: key);
 
-  static const routeName = '/profile';
+  static const routeName = '/stuff';
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('プロフィール作成'),
+          title: const Text('物品登録'),
         ),
-        body: MyProfileView(),
+        body: MyStuffView(),
       ),
     );
   }
 }
 
-class MyProfileView extends StatefulWidget {
-  const MyProfileView({Key? key}) : super(key: key);
+class MyStuffView extends StatefulWidget {
+  const MyStuffView({Key? key}) : super(key: key);
 
   @override
-  State<MyProfileView> createState() => _MyProfileViewState();
+  State<MyStuffView> createState() => _MyStuffViewState();
 }
 
-class _MyProfileViewState extends State<MyProfileView> {
-  String? nickName;
-  String? oneLineMessage;
+class _MyStuffViewState extends State<MyStuffView> {
+  String? name;
+  String? detail;
   Image? _img;
   String? _uid;
 
@@ -65,17 +61,17 @@ class _MyProfileViewState extends State<MyProfileView> {
     User? user = FirebaseAuth.instance.currentUser;
     _uid = user!.uid;
     try {
-      await storage.ref("users/$_uid/profile.png").putFile(file);
+      await storage.ref("items/$_uid/stuff.png").putFile(file);
       setState(() {
-        _img = Image.network("users/$_uid/profile.png");
+        _img = Image.network("items/$_uid/stuff.png");
       });
     } catch (e) {
       print(e);
     }
   }
 
-  final _nickNameController = TextEditingController();
-  final _oneLineMessageController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _detailController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -88,24 +84,24 @@ class _MyProfileViewState extends State<MyProfileView> {
               width:100,
               height:100,
               child: _img != null
-                ? _img!
-                : Container(
+                  ? _img!
+                  : Container(
                 color: Colors.grey,
               ),
             ),
             onTap: _upload,
           ),
           TextField(
-            controller: _nickNameController,
-            onChanged: (nickName) {
-              this.nickName = nickName;
+            controller: _nameController,
+            onChanged: (name) {
+              this.name = name;
             },
-            decoration: InputDecoration(hintText: 'ユーザー名'),
+            decoration: InputDecoration(hintText: '物品名'),
           ),
           TextField(
-            controller: _oneLineMessageController,
-            onChanged: (oneLineMessage) {
-              this.oneLineMessage = oneLineMessage;
+            controller: _detailController,
+            onChanged: (detail) {
+              this.detail = detail;
             },
             decoration: InputDecoration(hintText: 'ひとこと'),
           ),
@@ -114,29 +110,19 @@ class _MyProfileViewState extends State<MyProfileView> {
           ElevatedButton(
             child: Text('次へ'),
             onPressed: () async {
-              AuthUser? user = auth.FirebaseAuth.instance.currentUser;
-              final userData = User(
-                id: _uid,
-                name: _nickNameController.text.trim(),
-                image: "/users/$_uid/profile.png",
-                message: _oneLineMessageController.text.trim(),
-                matchingWith: "",
-                longitude: null,
-                latitude: null,
-                itemId: "",
-                updatedAt: null,
-              );
+              User? user = FirebaseAuth.instance.currentUser;
+              Map<String, dynamic> insertObj = {
+                'name': _nameController.text.trim(),
+                'detail': _detailController.text.trim(),
+                'image': "items/$_uid/stuff.png"
+              };
               try {
-                var doc = FirebaseFirestore.instance.collection('users').doc(_uid);
-                await doc.set({
-                  ...User.toFirestore(userData),
-                  'updatedAt': FieldValue.serverTimestamp(),
-                });
+                await FirebaseFirestore.instance.collection("items").doc(_uid).set(insertObj);
 
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (BuildContext context) => StuffView(),
+                    builder: (BuildContext context) => SampleItemListView(),
                   ),
                 );
               } catch (e) {
