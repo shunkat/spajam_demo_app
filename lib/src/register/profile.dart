@@ -4,6 +4,11 @@ import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
 import 'package:spajam_demo_app/src/models/user.dart';
 import 'package:spajam_demo_app/src/view/map_view.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../sample_feature/sample_item_list_view.dart';
 
@@ -43,6 +48,30 @@ class MyProfileView extends StatefulWidget {
 class _MyProfileViewState extends State<MyProfileView> {
   String? nickName;
   String? oneLineMessage;
+  Image? _img;
+  String? _uid;
+
+  // アップロード処理
+  void _upload() async {
+    // imagePickerで画像を選択する
+    final pickerFile =
+    await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickerFile == null) {
+      return ;
+    }
+    File file = File(pickerFile.path);
+    FirebaseStorage storage = FirebaseStorage.instance;
+    User? user = FirebaseAuth.instance.currentUser;
+    _uid = user!.uid;
+    try {
+      await storage.ref("$_uid/profile.png").putFile(file);
+      setState(() {
+        _img = Image.network("$_uid/profile.png");
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
 
   final _nickNameController = TextEditingController();
   final _oneLineMessageController = TextEditingController();
@@ -53,6 +82,18 @@ class _MyProfileViewState extends State<MyProfileView> {
       padding: const EdgeInsets.all(10.0),
       child: Column(
         children: [
+          GestureDetector(
+            child: SizedBox(
+              width:100,
+              height:100,
+              child: _img != null
+                ? _img!
+                : Container(
+                color: Colors.grey,
+              ),
+            ),
+            onTap: _upload,
+          ),
           TextField(
             controller: _nickNameController,
             onChanged: (nickName) {
@@ -74,9 +115,9 @@ class _MyProfileViewState extends State<MyProfileView> {
             onPressed: () async {
               AuthUser? user = auth.FirebaseAuth.instance.currentUser;
               final userData = User(
-                id: user!.uid,
+                id: _uid,
                 name: _nickNameController.text.trim(),
-                image: null,
+                image: "$_uid/profile.png",
                 message: _oneLineMessageController.text.trim(),
                 matchingWith: "",
                 longitude: null,
@@ -85,7 +126,7 @@ class _MyProfileViewState extends State<MyProfileView> {
                 updatedAt: null,
               );
               try {
-                var doc = FirebaseFirestore.instance.collection('users').doc(user.uid);
+                var doc = FirebaseFirestore.instance.collection('users').doc(_uid);
                 await doc.set({
                   ...User.toFirestore(userData),
                   'updatedAt': FieldValue.serverTimestamp(),
