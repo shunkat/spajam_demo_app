@@ -17,7 +17,7 @@ class RegisterView extends StatelessWidget {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('FlutterZero'),
+          title: const Text('新規登録/ログイン画面'),
         ),
         body: MyRegisterView(),
       ),
