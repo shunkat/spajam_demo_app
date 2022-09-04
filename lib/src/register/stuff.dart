@@ -1,17 +1,22 @@
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:spajam_demo_app/src/components/common_button.dart';
 import 'package:spajam_demo_app/src/components/common_label.dart';
+import 'package:spajam_demo_app/src/register/profile.dart';
 import 'package:spajam_demo_app/src/view/map_view.dart';
 
 import '../sample_feature/sample_item_list_view.dart';
+import '../view/image_picker_page.dart';
 
 class StuffView extends StatelessWidget {
   const StuffView({Key? key}) : super(key: key);
@@ -44,28 +49,35 @@ class MyStuffView extends StatefulWidget {
 class _MyStuffViewState extends State<MyStuffView> {
   String? name;
   String? detail;
-  Image? _img;
+  img.Image? _img;
   String? _uid;
 
   // アップロード処理
   void _upload() async {
     // imagePickerで画像を選択する
-    final pickerFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickerFile == null) {
-      return;
-    }
-    File file = File(pickerFile.path);
-    FirebaseStorage storage = FirebaseStorage.instance;
-    User? user = FirebaseAuth.instance.currentUser;
-    _uid = user!.uid;
-    try {
-      await storage.ref("items/$_uid/stuff.png").putFile(file);
-      setState(() {
-        _img = Image.network("items/$_uid/stuff.png");
-      });
-    } catch (e) {
-      print(e);
-    }
+    var metadata = SettableMetadata(contentType: 'image/jpeg');
+    Navigator.push(context, MaterialPageRoute(
+      builder: (BuildContext context) {
+        return ImagePickerPage(
+          title: Text('新規投稿'),
+          onImageSelected: (image, latlng) async {
+            Navigator.pop(context);
+
+            FirebaseStorage storage = FirebaseStorage.instance;
+            AuthUser? user = auth.FirebaseAuth.instance.currentUser;
+            final data = Uint8List.fromList(img.encodeJpg(image));
+            try {
+              await storage.ref("items/${user!.uid}/stuff.png").putData(data, metadata);
+              setState(() {
+                _img = image;
+              });
+            } catch (e) {
+              print(e);
+            }
+          },
+        );
+      },
+    ));
   }
 
   final _nameController = TextEditingController();
@@ -81,13 +93,14 @@ class _MyStuffViewState extends State<MyStuffView> {
           CommonLabel(text: '写真'),
           Center(
             child: GestureDetector(
-              child: SizedBox(
-                width: 100,
-                height: 100,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(70),
                 child: _img != null
-                    ? _img!
+                    ? Image.memory(Uint8List.fromList(img.encodeJpg(_img!)), width: 140, fit: BoxFit.cover)
                     : Container(
                         color: Colors.grey,
+                        height: 140,
+                        width: 140,
                       ),
               ),
               onTap: _upload,
@@ -116,14 +129,14 @@ class _MyStuffViewState extends State<MyStuffView> {
           CommonButton(
             title: '登録',
             onPressed: () async {
-              User? user = FirebaseAuth.instance.currentUser;
+              AuthUser? user = auth.FirebaseAuth.instance.currentUser;
               Map<String, dynamic> insertObj = {
                 'name': _nameController.text.trim(),
                 'detail': _detailController.text.trim(),
-                'image': "items/$_uid/stuff.png"
+                'image': "items/${user!.uid}/stuff.png"
               };
               try {
-                await FirebaseFirestore.instance.collection("items").doc(_uid).set(insertObj);
+                await FirebaseFirestore.instance.collection("items").doc(user.uid).set(insertObj);
 
                 Navigator.pushReplacement(
                   context,

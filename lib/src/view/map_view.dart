@@ -69,6 +69,18 @@ class MapViewState extends State<MapView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+          title: Text(
+            'わらしべ長者',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 1,
+          actions: [
+            TextButton(
+                onPressed: () {}, child: Text('マイページ', style: TextStyle(color: Color.fromARGB(255, 199, 182, 28))))
+          ]),
       body: Stack(
         children: [
           GoogleMap(
