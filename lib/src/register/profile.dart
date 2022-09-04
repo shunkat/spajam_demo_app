@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
+import 'package:spajam_demo_app/src/components/common_button.dart';
+import 'package:spajam_demo_app/src/components/common_label.dart';
 import 'package:spajam_demo_app/src/models/user.dart';
 import 'package:spajam_demo_app/src/view/map_view.dart';
 import 'dart:io';
@@ -32,6 +34,9 @@ class ProfileView extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(
           title: const Text('プロフィール作成'),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 1,
         ),
         body: MyProfileView(),
       ),
@@ -79,28 +84,36 @@ class _MyProfileViewState extends State<MyProfileView> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(10.0),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GestureDetector(
-            child: SizedBox(
-              width: 100,
-              height: 100,
-              child: _img != null
-                  ? _img!
-                  : Container(
-                      color: Colors.grey,
-                    ),
+          CommonLabel(text: '写真'),
+          Center(
+            child: GestureDetector(
+              child: SizedBox(
+                width: 100,
+                height: 100,
+                child: _img != null
+                    ? _img!
+                    : Container(
+                        color: Colors.grey,
+                      ),
+              ),
+              onTap: _upload,
             ),
-            onTap: _upload,
           ),
+          Padding(padding: const EdgeInsets.all(10)),
+          CommonLabel(text: 'ユーザー名'),
           TextField(
             controller: _nickNameController,
             onChanged: (nickName) {
               this.nickName = nickName;
             },
-            decoration: InputDecoration(hintText: 'ユーザー名'),
+            decoration: InputDecoration(hintText: 'わらしべ太郎'),
           ),
+          Padding(padding: const EdgeInsets.all(10)),
+          CommonLabel(text: 'ひとこと'),
           TextField(
             controller: _oneLineMessageController,
             onChanged: (oneLineMessage) {
@@ -108,42 +121,42 @@ class _MyProfileViewState extends State<MyProfileView> {
             },
             decoration: InputDecoration(hintText: 'ひとこと'),
           ),
+          Spacer(),
 
           //  ビルド通ったら下を有効化
-          ElevatedButton(
-            child: Text('次へ'),
-            onPressed: () async {
-              AuthUser? user = auth.FirebaseAuth.instance.currentUser;
-              final userData = User(
-                id: user!.uid,
-                name: _nickNameController.text.trim(),
-                image: "/users/$_uid/profile.png",
-                message: _oneLineMessageController.text.trim(),
-                matchingWith: "",
-                longitude: null,
-                latitude: null,
-                itemId: "",
-                updatedAt: null,
-              );
-              try {
-                var doc = FirebaseFirestore.instance.collection('users').doc(user.uid);
-                await doc.set({
-                  ...User.toFirestore(userData),
-                  'updatedAt': FieldValue.serverTimestamp(),
-                });
-
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (BuildContext context) => StuffView(),
-                  ),
+          CommonButton(
+              title: '次へ',
+              onPressed: () async {
+                AuthUser? user = auth.FirebaseAuth.instance.currentUser;
+                final userData = User(
+                  id: user!.uid,
+                  name: _nickNameController.text.trim(),
+                  image: "/users/$_uid/profile.png",
+                  message: _oneLineMessageController.text.trim(),
+                  matchingWith: "",
+                  longitude: null,
+                  latitude: null,
+                  itemId: "",
+                  updatedAt: null,
                 );
-              } catch (e) {
-                print('-----insert error----');
-                print(e);
-              }
-            },
-          )
+                try {
+                  var doc = FirebaseFirestore.instance.collection('users').doc(user.uid);
+                  await doc.set({
+                    ...User.toFirestore(userData),
+                    'updatedAt': FieldValue.serverTimestamp(),
+                  });
+
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (BuildContext context) => StuffView(),
+                    ),
+                  );
+                } catch (e) {
+                  print('-----insert error----');
+                  print(e);
+                }
+              })
         ],
       ),
     );

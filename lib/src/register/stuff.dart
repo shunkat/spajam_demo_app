@@ -7,15 +7,11 @@ import 'dart:convert';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:spajam_demo_app/src/components/common_button.dart';
+import 'package:spajam_demo_app/src/components/common_label.dart';
+import 'package:spajam_demo_app/src/view/map_view.dart';
 
 import '../sample_feature/sample_item_list_view.dart';
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-
-  runApp(StuffView());
-}
 
 class StuffView extends StatelessWidget {
   const StuffView({Key? key}) : super(key: key);
@@ -28,6 +24,9 @@ class StuffView extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(
           title: const Text('物品登録'),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 1,
         ),
         body: MyStuffView(),
       ),
@@ -51,10 +50,9 @@ class _MyStuffViewState extends State<MyStuffView> {
   // アップロード処理
   void _upload() async {
     // imagePickerで画像を選択する
-    final pickerFile =
-    await ImagePicker().pickImage(source: ImageSource.gallery);
+    final pickerFile = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickerFile == null) {
-      return ;
+      return;
     }
     File file = File(pickerFile.path);
     FirebaseStorage storage = FirebaseStorage.instance;
@@ -76,21 +74,27 @@ class _MyStuffViewState extends State<MyStuffView> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(10.0),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GestureDetector(
-            child: SizedBox(
-              width:100,
-              height:100,
-              child: _img != null
-                  ? _img!
-                  : Container(
-                color: Colors.grey,
+          CommonLabel(text: '写真'),
+          Center(
+            child: GestureDetector(
+              child: SizedBox(
+                width: 100,
+                height: 100,
+                child: _img != null
+                    ? _img!
+                    : Container(
+                        color: Colors.grey,
+                      ),
               ),
+              onTap: _upload,
             ),
-            onTap: _upload,
           ),
+          Padding(padding: const EdgeInsets.all(10)),
+          CommonLabel(text: '物品名'),
           TextField(
             controller: _nameController,
             onChanged: (name) {
@@ -98,6 +102,8 @@ class _MyStuffViewState extends State<MyStuffView> {
             },
             decoration: InputDecoration(hintText: '物品名'),
           ),
+          Padding(padding: const EdgeInsets.all(10)),
+          CommonLabel(text: 'ひとこと'),
           TextField(
             controller: _detailController,
             onChanged: (detail) {
@@ -105,10 +111,10 @@ class _MyStuffViewState extends State<MyStuffView> {
             },
             decoration: InputDecoration(hintText: 'ひとこと'),
           ),
-
+          Spacer(),
           //  ビルド通ったら下を有効化
-          ElevatedButton(
-            child: Text('次へ'),
+          CommonButton(
+            title: '登録',
             onPressed: () async {
               User? user = FirebaseAuth.instance.currentUser;
               Map<String, dynamic> insertObj = {
@@ -122,7 +128,7 @@ class _MyStuffViewState extends State<MyStuffView> {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (BuildContext context) => SampleItemListView(),
+                    builder: (BuildContext context) => MapView(),
                   ),
                 );
               } catch (e) {

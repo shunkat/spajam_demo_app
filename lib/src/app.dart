@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:spajam_demo_app/src/components/common_button.dart';
 import 'package:spajam_demo_app/src/view/map_view.dart';
 import 'package:spajam_demo_app/src/register/profile.dart';
 import 'package:spajam_demo_app/src/register/register.dart';
@@ -70,6 +72,8 @@ class MyApp extends StatelessWidget {
               settings: routeSettings,
               builder: (BuildContext context) {
                 switch (routeSettings.name) {
+                  case HomeView.routeName:
+                    return const HomeView();
                   case SettingsView.routeName:
                     return SettingsView(controller: settingsController);
                   case SampleItemDetailsView.routeName:
@@ -83,13 +87,44 @@ class MyApp extends StatelessWidget {
                   case ProfileView.routeName:
                     return const ProfileView();
                   default:
-                    return const RegisterView();
+                    return const HomeView();
                 }
               },
             );
           },
         );
       },
+    );
+  }
+}
+
+class HomeView extends StatelessWidget {
+  const HomeView({Key? key}) : super(key: key);
+  static const routeName = "/";
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+        child: Column(
+          children: [
+            Spacer(),
+            Image.asset('assets/images/home.png'),
+            Spacer(),
+            CommonButton(
+                title: 'はじめる',
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RegisterView(),
+                    ),
+                  );
+                }),
+          ],
+        ),
+      ),
     );
   }
 }
