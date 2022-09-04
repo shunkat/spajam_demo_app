@@ -47,19 +47,18 @@ class MapViewState extends State<MapView> {
   }
 
   prepareIcons() {
-    imageChangeUint8List('assets/images/marker.png', 104, 92).then((onValue) {
+    imageChangeUint8List('assets/images/marker.png', 150).then((onValue) {
       normalIcon = BitmapDescriptor.fromBytes(onValue);
     });
-    imageChangeUint8List('assets/images/matching_marker.png', 104, 92).then((onValue) {
+    imageChangeUint8List('assets/images/matching_marker.png', 150).then((onValue) {
       matchingIcon = BitmapDescriptor.fromBytes(onValue);
     });
   }
 
-  Future<Uint8List> imageChangeUint8List(String path, int height, int width) async {
+  Future<Uint8List> imageChangeUint8List(String path, int width) async {
     final ByteData byteData = await rootBundle.load(path);
     final Codec codec = await instantiateImageCodec(
       byteData.buffer.asUint8List(),
-      targetHeight: height,
       targetWidth: width,
     );
     final FrameInfo uiFI = await codec.getNextFrame();
@@ -70,7 +69,6 @@ class MapViewState extends State<MapView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('さがす')),
       body: Stack(
         children: [
           GoogleMap(
@@ -85,7 +83,7 @@ class MapViewState extends State<MapView> {
           Builder(builder: (context) {
             if (isWaitingOtherApproving) {
               return Padding(
-                padding: const EdgeInsets.all(30.0),
+                padding: const EdgeInsets.fromLTRB(30, 50, 30, 0),
                 child: Container(
                   child: const Padding(
                     padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
@@ -108,7 +106,7 @@ class MapViewState extends State<MapView> {
               return Stack(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.all(30.0),
+                    padding: const EdgeInsets.fromLTRB(30, 50, 30, 30),
                     child: Container(
                       child: const Padding(
                         padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
@@ -159,9 +157,8 @@ class MapViewState extends State<MapView> {
                             "userId": auth.FirebaseAuth.instance.currentUser!.uid,
                           }
                         });
-                        http.post(Uri.parse(url), headers: headers, body: body).then((res) {
-                          setState(() => isWaitingOtherApproving = true);
-                        });
+                        setState(() => isWaitingOtherApproving = true);
+                        http.post(Uri.parse(url), headers: headers, body: body);
                       },
                     ),
                   ),
@@ -177,10 +174,13 @@ class MapViewState extends State<MapView> {
   }
 
   Marker _userMarker(User user) {
+    final currentUserId = auth.FirebaseAuth.instance.currentUser!.uid;
+    print(user.matchingWith);
     return Marker(
       markerId: MarkerId(user.id),
-      icon: user.matchingWith == null ? normalIcon : matchingIcon,
+      icon: user.matchingWith != currentUserId ? normalIcon : matchingIcon,
       position: LatLng(user.latitude!, user.longitude!),
+      zIndex: user.matchingWith != currentUserId ? 1 : 2,
     );
   }
 
@@ -203,7 +203,8 @@ class MapViewState extends State<MapView> {
               final target = users.firstWhere((e) => e.id == user.id);
               target
                 ..latitude = user.latitude
-                ..longitude = user.longitude;
+                ..longitude = user.longitude
+                ..matchingWith = user.matchingWith;
             } catch (e) {
               users.add(user);
             }
@@ -294,6 +295,8 @@ class MapViewState extends State<MapView> {
         .snapshots()
         .listen((event) {
       if (event.docs.length > 0) {
+        if (isMatching) return;
+        setState(() => {isMatching = true});
         showDialog(
           barrierDismissible: false,
           context: context,
@@ -304,7 +307,6 @@ class MapViewState extends State<MapView> {
                 CupertinoDialogAction(
                   child: Text("OK"),
                   onPressed: () {
-                    setState(() => {isMatching = true});
                     Navigator.pop(context);
                   },
                 ),
@@ -323,7 +325,6 @@ class MapViewState extends State<MapView> {
                 CupertinoDialogAction(
                   child: Text("OK"),
                   onPressed: () {
-                    setState(() => {isMatching = true});
                     Navigator.pop(context);
                   },
                 ),

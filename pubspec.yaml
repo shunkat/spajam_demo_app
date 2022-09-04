@@ -26,6 +26,9 @@ dependencies:
   google_maps_flutter_web: ^0.4.0+2
   geolocator: ^9.0.1
   http: ^0.13.5
+  extended_image: ^6.3.0
+  modal_bottom_sheet: ^2.1.0
+  photo_manager: ^2.2.1
 
 dev_dependencies:
   flutter_test:
