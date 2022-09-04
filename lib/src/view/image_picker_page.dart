@@ -56,7 +56,7 @@ class _ImagePickerPageState extends State<ImagePickerPage> {
   getImagesPath() async {
     directories = await PhotoManager.getAssetPathList(type: RequestType.image);
     selectedDirectory = directories?.firstWhere((d) => d.isAll);
-    images = await selectedDirectory?.assetList;
+    images = await selectedDirectory?.getAssetListPaged(page: 0, size: 100);
     selectedImage = images?.first;
     setState(() {});
   }
@@ -66,6 +66,9 @@ class _ImagePickerPageState extends State<ImagePickerPage> {
     return Scaffold(
       appBar: AppBar(
         title: widget.title,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 1,
         actions: [
           TextButton(
             onPressed: () async {
@@ -99,7 +102,7 @@ class _ImagePickerPageState extends State<ImagePickerPage> {
                 },
               );
             },
-            child: Text(widget.actionText),
+            child: Text('完了'),
           ),
         ],
       ),
@@ -112,7 +115,7 @@ class _ImagePickerPageState extends State<ImagePickerPage> {
               children: [
                 selectedImage != null
                     ? FutureBuilder<Uint8List?>(
-                        future: selectedImage!.thumbDataWithSize(1200, 1200),
+                        future: selectedImage!.thumbnailDataWithSize(ThumbnailSize(1200, 1200)),
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
                             return CustomPaint(
@@ -271,7 +274,7 @@ class _ImagePickerPageState extends State<ImagePickerPage> {
               Navigator.of(context).pop();
 
               selectedDirectory = directory;
-              images = await directory.assetList;
+              images = await directory.getAssetListPaged(page: 0, size: 100);
               selectedImage = images!.first;
               setState(() {});
             },
@@ -370,7 +373,7 @@ class GridImageList extends StatelessWidget {
           SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, crossAxisSpacing: 2, mainAxisSpacing: 2),
       itemBuilder: (_, i) {
         return FutureBuilder<Uint8List?>(
-          future: images[i].thumbData,
+          future: images[i].thumbnailData,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               return GestureDetector(
@@ -406,7 +409,7 @@ class FolderList extends StatelessWidget {
         final directory = directories[index];
         final topImageLoader = () async {
           final assetsFuture = await directory.getAssetListRange(start: 0, end: 1);
-          final imageData = await assetsFuture[0].thumbData;
+          final imageData = await assetsFuture[0].thumbnailData;
           return imageData!;
         };
 

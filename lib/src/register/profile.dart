@@ -1,10 +1,14 @@
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
 import 'package:spajam_demo_app/src/components/common_button.dart';
 import 'package:spajam_demo_app/src/components/common_label.dart';
 import 'package:spajam_demo_app/src/models/user.dart';
+import 'package:spajam_demo_app/src/view/image_picker_page.dart';
 import 'package:spajam_demo_app/src/view/map_view.dart';
 import 'dart:io';
 import 'dart:convert';
@@ -54,28 +58,35 @@ class MyProfileView extends StatefulWidget {
 class _MyProfileViewState extends State<MyProfileView> {
   String? nickName;
   String? oneLineMessage;
-  Image? _img;
+  img.Image? _img;
   String? _uid;
 
   // アップロード処理
   void _upload() async {
     // imagePickerで画像を選択する
-    final pickerFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickerFile == null) {
-      return;
-    }
-    File file = File(pickerFile.path);
-    FirebaseStorage storage = FirebaseStorage.instance;
-    AuthUser? user = auth.FirebaseAuth.instance.currentUser;
-    _uid = user!.uid;
-    try {
-      await storage.ref("users/$_uid/profile.png").putFile(file);
-      setState(() {
-        _img = Image.network("users/$_uid/profile.png");
-      });
-    } catch (e) {
-      print(e);
-    }
+    var metadata = SettableMetadata(contentType: 'image/jpeg');
+    Navigator.push(context, MaterialPageRoute(
+      builder: (BuildContext context) {
+        return ImagePickerPage(
+          title: Text('新規投稿'),
+          onImageSelected: (image, latlng) async {
+            Navigator.pop(context);
+
+            FirebaseStorage storage = FirebaseStorage.instance;
+            AuthUser? user = auth.FirebaseAuth.instance.currentUser;
+            final data = Uint8List.fromList(img.encodeJpg(image));
+            try {
+              await storage.ref("users/$user!.uid/profile.png").putData(data, metadata);
+              setState(() {
+                _img = image;
+              });
+            } catch (e) {
+              print(e);
+            }
+          },
+        );
+      },
+    ));
   }
 
   final _nickNameController = TextEditingController();
@@ -91,13 +102,14 @@ class _MyProfileViewState extends State<MyProfileView> {
           CommonLabel(text: '写真'),
           Center(
             child: GestureDetector(
-              child: SizedBox(
-                width: 100,
-                height: 100,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(70),
                 child: _img != null
-                    ? _img!
+                    ? Image.memory(Uint8List.fromList(img.encodeJpg(_img!)), width: 140, fit: BoxFit.cover)
                     : Container(
                         color: Colors.grey,
+                        height: 140,
+                        width: 140,
                       ),
               ),
               onTap: _upload,
@@ -131,7 +143,7 @@ class _MyProfileViewState extends State<MyProfileView> {
                 final userData = User(
                   id: user!.uid,
                   name: _nickNameController.text.trim(),
-                  image: "/users/$_uid/profile.png",
+                  image: "/users/${user.uid}/profile.png",
                   message: _oneLineMessageController.text.trim(),
                   matchingWith: "",
                   longitude: null,

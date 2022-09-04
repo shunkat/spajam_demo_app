@@ -29,6 +29,7 @@ dependencies:
   extended_image: ^6.3.0
   modal_bottom_sheet: ^2.1.0
   photo_manager: ^2.2.1
+  image: ^3.2.0
 
 dev_dependencies:
   flutter_test:
